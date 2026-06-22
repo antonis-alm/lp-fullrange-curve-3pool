@@ -331,29 +331,52 @@ class LPFullRangeCurve3poolStrategy(IntentStrategy):
         market: MarketSnapshot,
         balances: dict[str, Decimal],
     ) -> Decimal:
-        amount = balances.get("USDC", Decimal("0"))
-        if amount <= Decimal("0"):
-            amount = balances.get("DAI", Decimal("0"))
-        if amount <= Decimal("0"):
-            amount = balances.get("USDT", Decimal("0"))
-        if amount <= Decimal("0"):
-            amount = Decimal("100")
+        default_amount = balances.get("USDC", Decimal("0"))
+        if default_amount <= Decimal("0"):
+            default_amount = balances.get("DAI", Decimal("0"))
+        if default_amount <= Decimal("0"):
+            default_amount = balances.get("USDT", Decimal("0"))
+        if default_amount <= Decimal("0"):
+            default_amount = Decimal("100")
 
-        envelope = market.estimate_slippage(
-            token_in="USDC",
-            token_out="DAI",
-            amount=amount,
-            chain=self.chain,
-            protocol=self.protocol,
+        last_error: Exception | None = None
+        candidate_pairs = (("USDC", "DAI"), ("USDT", "USDC"), ("DAI", "USDT"))
+
+        for protocol_hint in (self.protocol, None):
+            for token_in, token_out in candidate_pairs:
+                amount = balances.get(token_in, Decimal("0"))
+                if amount <= Decimal("0"):
+                    amount = default_amount
+
+                try:
+                    envelope = market.estimate_slippage(
+                        token_in=token_in,
+                        token_out=token_out,
+                        amount=amount,
+                        chain=self.chain,
+                        protocol=protocol_hint,
+                    )
+                except (
+                    SlippageEstimateUnavailableError,
+                    ValueError,
+                    KeyError,
+                    TypeError,
+                ) as exc:
+                    last_error = exc
+                    continue
+
+                estimate = getattr(envelope, "value", envelope)
+                slippage_bps = getattr(estimate, "slippage_bps", None)
+                if slippage_bps is not None:
+                    return Decimal(str(slippage_bps))
+                price_impact_bps = getattr(estimate, "price_impact_bps", None)
+                if price_impact_bps is not None:
+                    return Decimal(str(price_impact_bps))
+                last_error = ValueError("slippage estimate did not include bps fields")
+
+        raise SlippageEstimateUnavailableError(
+            f"no supported stable pair route for slippage guard ({last_error})"
         )
-        estimate = getattr(envelope, "value", envelope)
-        slippage_bps = getattr(estimate, "slippage_bps", None)
-        if slippage_bps is not None:
-            return Decimal(str(slippage_bps))
-        price_impact_bps = getattr(estimate, "price_impact_bps", None)
-        if price_impact_bps is not None:
-            return Decimal(str(price_impact_bps))
-        raise ValueError("slippage estimate did not include bps fields")
 
     def _build_coin_amounts(
         self,

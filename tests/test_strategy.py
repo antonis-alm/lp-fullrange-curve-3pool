@@ -195,6 +195,23 @@ def test_holds_on_pool_analytics_unavailable(strategy: LPFullRangeCurve3poolStra
     assert _intent_type(intent) == "HOLD"
 
 
+def test_falls_back_to_auto_protocol_for_slippage_guard(
+    strategy: LPFullRangeCurve3poolStrategy,
+) -> None:
+    market = _market()
+
+    def _estimate_slippage(*args, **kwargs):
+        if kwargs.get("protocol") == "curve":
+            raise SlippageEstimateUnavailableError("no pool for protocol")
+        return SimpleNamespace(value=SimpleNamespace(slippage_bps=Decimal("5")))
+
+    market.estimate_slippage.side_effect = _estimate_slippage
+    intent = strategy.decide(market)
+
+    assert _intent_type(intent) == "LP_OPEN"
+    assert any(call.kwargs.get("protocol") is None for call in market.estimate_slippage.call_args_list)
+
+
 def test_holds_on_slippage_estimate_unavailable_reentry(
     strategy: LPFullRangeCurve3poolStrategy,
 ) -> None:
