@@ -1,0 +1,54 @@
+{
+  "chain": "ethereum",
+  "protocol": "curve",
+  "pool": "3pool",
+  "assets": ["DAI", "USDC", "USDT"],
+  "single_position_only": true,
+  "initial_lp_allocation_pct": "1.0",
+  "reentry_lp_allocation_pct": "1.0",
+  "dust_reserve_pct_per_asset": "0.0",
+  "peg_lower_bound": "0.995",
+  "peg_upper_bound": "1.005",
+  "pool_single_asset_exit_threshold_pct": 70,
+  "pool_single_asset_reentry_max_pct": 60,
+  "withdraw_slippage_limit_bps": 20,
+  "deposit_slippage_limit_bps": 10,
+  "depeg_detection_enabled": true,
+  "depeg_exit_overrides_slippage": true,
+  "material_depeg_move_bps": 30,
+  "preferred_withdrawal_order": ["USDC", "DAI", "USDT"],
+  "fallback_to_proportional_withdrawal_on_excessive_slippage": true,
+  "do_not_reopen_until_all_assets_in_peg_band": true,
+  "force_action": "",
+  "force_swap_from": "USDT",
+  "force_swap_to": "USDC",
+  "force_swap_amount_pct_of_balance": "0.1",
+  "force_position_id": "",
+  "pool_analytics_address": "0xbebc44782c7db0a1a60cb6fe97d0b483032ff1c7",
+  "token_funding": [
+    {
+      "symbol": "USDT",
+      "address": "0xdac17f958d2ee523a2206206994597c13d831ec7",
+      "amount": "10",
+      "amount_type": "usd"
+    },
+    {
+      "symbol": "USDC",
+      "address": "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
+      "amount": "10",
+      "amount_type": "usd"
+    },
+    {
+      "symbol": "DAI",
+      "address": "0x6b175474e89094c44da98b954eedeac495271d0f",
+      "amount": "10",
+      "amount_type": "usd"
+    }
+  ],
+  "anvil_funding": {
+    "ETH": 10,
+    "USDT": 50000,
+    "USDC": 50000,
+    "DAI": 50000
+  }
+}
