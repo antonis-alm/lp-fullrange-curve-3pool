@@ -3,7 +3,7 @@ name = "l_p_full_range_curve_3pool"
 version = "0.1.0"
 requires-python = ">=3.12"
 dependencies = [
-    "almanak>=2.19.0rc8",
+    "almanak>=2.21.0",
 ]
 
 [tool.almanak.run]
